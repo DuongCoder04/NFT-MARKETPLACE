@@ -6,14 +6,8 @@ export class User{
     @PrimaryColumn()
     wallet_address: string;
 
-    @Column({ nullable: true })
-    display_name: string;
-
-    @Column({ nullable: true })
-    avatar_url: string;
-
-    @Column({ nullable: true })
-    bio: string;
+    @Column({type: 'jsonb', nullable: true})
+    profile_data: Record<string, any>;
 
     @CreateDateColumn()
     created_at: Date;

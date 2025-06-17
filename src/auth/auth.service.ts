@@ -2,14 +2,16 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { verifyMessage } from 'ethers';
 import { JwtService } from '@nestjs/jwt';
+import { UsersService } from 'src/users/users.service'; // 👉 Import UsersService để tạo user
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
+    private readonly usersService: UsersService, // 👈 Inject UsersService
   ) {}
 
-  // Giả lập nơi lưu nonce (nên dùng DB thật)
+  // ⚠️ Đây chỉ là nơi lưu nonce giả lập - bạn nên dùng Redis hoặc DB thật!
   private nonces = new Map<string, string>();
 
   getNonce(wallet: string) {
@@ -27,7 +29,6 @@ export class AuthService {
     }
 
     let recoveredAddress: string;
-
     try {
       recoveredAddress = verifyMessage(message, signature).toLowerCase();
     } catch (error) {
@@ -38,11 +39,14 @@ export class AuthService {
       throw new UnauthorizedException('Signature does not match wallet address');
     }
 
-    // ✅ Xác thực thành công, tạo JWT
+    // ✅ Tự động tạo user nếu chưa tồn tại
+    await this.usersService.createIfNotExists(lowerWallet);
+
+    // ✅ Tạo JWT sau khi xác thực thành công
     const payload = { wallet: lowerWallet };
     const token = this.jwtService.sign(payload);
 
-    // Optional: Xoá nonce sau khi dùng để tránh replay attack
+    // ✅ Xoá nonce để chống replay attack
     this.nonces.delete(lowerWallet);
 
     return {
