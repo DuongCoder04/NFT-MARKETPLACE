@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 🧾 Đường dẫn file chứa ví
-const walletPath = path.join(__dirname, 'wallet.json');
+const walletPath = path.join(__dirname, 'wallet1.json');
 
 // 🪪 Bước 1: Tạo hoặc đọc ví
 let wallet;
