@@ -1,47 +1,61 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtModule } from '@nestjs/jwt'; // 👈 Bổ sung dòng này
+import { JwtModule } from '@nestjs/jwt';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { IpfsModule } from './ipfs/ipfs.module';
+
 import { User } from './users/users.entity';
 
 @Module({
   imports: [
+    // Load biến môi trường toàn cục
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
 
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DATABASE_HOST,
-      port: parseInt(process.env.DATABASE_PORT || '5432', 10),
-      username: process.env.DATABASE_USER,
-      password: process.env.DATABASE_PASSWORD,
-      database: process.env.DATABASE_NAME,
-      entities: [User],
-      synchronize: true,
-      logging: true,
+    // Kết nối PostgreSQL
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get<string>('DATABASE_HOST'),
+        port: parseInt(config.get<string>('DATABASE_PORT') || '5432', 10),
+        username: config.get<string>('DATABASE_USER'),
+        password: config.get<string>('DATABASE_PASSWORD'),
+        database: config.get<string>('DATABASE_NAME'),
+        entities: [User],
+        synchronize: true,
+        logging: true,
+      }),
     }),
 
+    // Đăng ký các entity riêng
     TypeOrmModule.forFeature([User]),
 
-    // ✅ Bổ sung JwtModule để có thể dùng JWT với secret từ .env
+    // Đăng ký JWT từ biến môi trường
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '1d' },
+        signOptions: {
+          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '1h',
+        },
       }),
       inject: [ConfigService],
     }),
 
+    // Các module tính năng
     AuthModule,
     UsersModule,
+    IpfsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
