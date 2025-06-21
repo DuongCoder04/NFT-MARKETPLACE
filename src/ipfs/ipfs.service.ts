@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import * as FormData from 'form-data';
+import FormData from 'form-data'; // ✅ import chuẩn
 import { createReadStream } from 'fs';
 import { join } from 'path';
 
@@ -10,10 +10,7 @@ export class IpfsService {
   private readonly logger = new Logger(IpfsService.name);
   private readonly PINATA_BASE_URL = 'https://api.pinata.cloud/pinning';
 
-  constructor(private readonly configService: ConfigService) {
-    // console.log('PINATA_API_KEY:', this.configService.get('PINATA_API_KEY'));
-    // console.log('PINATA_API_SECRET:', this.configService.get('PINATA_API_SECRET'));
-  }
+  constructor(private readonly configService: ConfigService) {}
 
   async uploadImage(file: Express.Multer.File): Promise<string> {
     const apiKey = this.configService.get<string>('PINATA_API_KEY');
@@ -38,9 +35,8 @@ export class IpfsService {
       });
 
       return `https://gateway.pinata.cloud/ipfs/${res.data.IpfsHash}`;
-    } catch (error) {
-      this.logger.error('❌ Upload image failed', error?.response?.data || error.message);
-      throw new InternalServerErrorException('Upload image to IPFS failed');
+    } catch (error: unknown) {
+      this.handleError(error, 'Upload image failed');
     }
   }
 
@@ -70,9 +66,19 @@ export class IpfsService {
       });
 
       return `https://gateway.pinata.cloud/ipfs/${res.data.IpfsHash}`;
-    } catch (error) {
-      this.logger.error('❌ Upload metadata failed', error?.response?.data || error.message);
-      throw new InternalServerErrorException('Upload metadata to IPFS failed');
+    } catch (error: unknown) {
+      this.handleError(error, 'Upload metadata failed');
     }
+  }
+
+  private handleError(error: unknown, context: string): never {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const err = error as any;
+      this.logger.error(`❌ ${context}`, err.response?.data || err.message);
+    } else {
+      this.logger.error(`❌ ${context}`, String(error));
+    }
+
+    throw new InternalServerErrorException(context);
   }
 }

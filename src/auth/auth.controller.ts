@@ -8,6 +8,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RequestMessageDto } from './dto/request-message.dto';
 import { LoginDto } from './dto/login.dto';
+import { SignatureRequestDto } from './dto/signature-request.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -27,7 +28,12 @@ export class AuthController {
 
     return { message };
   }
-
+  @Post('generate-signature')
+  async getSignature(@Body() body: SignatureRequestDto) {
+    const { wallet, nonce , privateKey} = body;
+    const signature = await this.authService.generateSignature(wallet, nonce, privateKey);
+    return { signature };
+  }
   @Post('login')
   @ApiOperation({ summary: 'Đăng nhập bằng chữ ký' })
   @ApiResponse({ status: 200, description: 'Trả về JWT token nếu hợp lệ' })

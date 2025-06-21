@@ -12,6 +12,10 @@ import { IpfsModule } from './ipfs/ipfs.module';
 
 import { User } from './users/users.entity';
 
+import { TokenController } from './blockchain/token.controller';
+import { TokenService } from './blockchain/token.service';
+import { TokenModule } from './blockchain/token.module';
+
 @Module({
   imports: [
     // Load biến môi trường toàn cục
@@ -56,8 +60,9 @@ import { User } from './users/users.entity';
     AuthModule,
     UsersModule,
     IpfsModule,
+    TokenModule
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, TokenController],
+  providers: [AppService, TokenService],
 })
-export class AppModule {}
+export class AppModule { }

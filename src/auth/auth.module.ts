@@ -6,11 +6,13 @@ import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { IpfsModule } from 'src/ipfs/ipfs.module';
 
 @Module({
   imports: [
     PassportModule,
     UsersModule,
+    IpfsModule, // 👈 IMPORT IPFS MODULE
     JwtModule.registerAsync({
       imports: [ConfigModule], // ⚠️ cần để truy cập process.env
       useFactory: async (configService: ConfigService) => ({

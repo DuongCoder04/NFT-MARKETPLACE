@@ -1,0 +1,9 @@
+// tsconfig.hardhat.json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "noEmit": true
+  },
+  "include": ["hardhat.config.ts", "scripts", "test", "typechain-types"]
+}

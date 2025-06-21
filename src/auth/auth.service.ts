@@ -1,56 +1,85 @@
-// src/auth/auth.service.ts
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { verifyMessage } from 'ethers';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from 'src/users/users.service'; // 👉 Import UsersService để tạo user
+import { UsersService } from 'src/users/users.service';
+import { IpfsService } from '../ipfs/ipfs.service';
+import { verifyMessage, Wallet } from 'ethers';
 
 @Injectable()
 export class AuthService {
+  // ✅ Map này chỉ là giả lập - nên dùng Redis thực tế
+  private readonly nonces = new Map<string, string>();
+
   constructor(
     private readonly jwtService: JwtService,
-    private readonly usersService: UsersService, // 👈 Inject UsersService
+    private readonly usersService: UsersService,
+    private readonly ipfsService: IpfsService,
   ) {}
 
-  // ⚠️ Đây chỉ là nơi lưu nonce giả lập - bạn nên dùng Redis hoặc DB thật!
-  private nonces = new Map<string, string>();
-
+  /**
+   * Tạo hoặc trả về nonce để user ký
+   */
   getNonce(wallet: string) {
-    const nonce = `Sign this message to login: ${Date.now()}`;
-    this.nonces.set(wallet.toLowerCase(), nonce);
+    const normalized = wallet.toLowerCase();
+
+    // ✅ Nếu nonce đã tồn tại (chưa verify) thì dùng lại
+    const existing = this.nonces.get(normalized);
+    if (existing) return { message: existing };
+
+    const nonce = `Sign this message to login:\nWallet: ${normalized}\nNonce: ${Date.now()}`;
+    this.nonces.set(normalized, nonce);
+
     return { message: nonce };
   }
 
+  /**
+   * Chỉ dùng nếu bạn cần ký message phía server
+   */
+  async generateSignature(walletAddress: string, nonce: string, privateKey: string): Promise<string> {
+    if (!privateKey) {
+      throw new Error('Missing AUTH_SIGNER_PRIVATE_KEY');
+    }
+
+    const message = `Welcome to Web3 App!\n\nWallet: ${walletAddress}\nNonce: ${nonce}`;
+    const wallet = new Wallet(privateKey);
+
+    return wallet.signMessage(message);
+  }
+
+  /**
+   * Xác minh chữ ký và tạo JWT nếu hợp lệ
+   */
   async verifySignature(wallet: string, signature: string) {
-    const lowerWallet = wallet.toLowerCase();
-    const message = this.nonces.get(lowerWallet);
+    const normalized = wallet.toLowerCase();
+    const nonceMessage = this.nonces.get(normalized);
 
-    if (!message) {
-      throw new UnauthorizedException('No nonce found for this wallet');
+    if (!nonceMessage) {
+      throw new UnauthorizedException('❌ Nonce không tồn tại cho ví này.');
     }
 
-    let recoveredAddress: string;
+    let recovered: string;
     try {
-      recoveredAddress = verifyMessage(message, signature).toLowerCase();
-    } catch (error) {
-      throw new UnauthorizedException('Invalid signature');
+      recovered = verifyMessage(nonceMessage, signature).toLowerCase();
+    } catch {
+      throw new UnauthorizedException('❌ Chữ ký không hợp lệ.');
     }
 
-    if (recoveredAddress !== lowerWallet) {
-      throw new UnauthorizedException('Signature does not match wallet address');
+    if (recovered !== normalized) {
+      throw new UnauthorizedException('❌ Địa chỉ ví không khớp với chữ ký.');
     }
 
-    // ✅ Tự động tạo user nếu chưa tồn tại
-    await this.usersService.createIfNotExists(lowerWallet);
+    // ✅ Tạo user nếu chưa tồn tại
+    await this.usersService.createIfNotExists(normalized);
 
-    // ✅ Tạo JWT sau khi xác thực thành công
-    const payload = { wallet: lowerWallet };
-    const token = this.jwtService.sign(payload);
+    // ✅ Tạo JWT
+    const payload = { wallet: normalized };
+    const accessToken = this.jwtService.sign(payload);
 
-    // ✅ Xoá nonce để chống replay attack
-    this.nonces.delete(lowerWallet);
+    // ✅ Xoá nonce sau khi xác thực
+    this.nonces.delete(normalized);
 
     return {
-      accessToken: token,
+      accessToken,
+      wallet: normalized,
     };
   }
 }

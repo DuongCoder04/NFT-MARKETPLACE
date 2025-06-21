@@ -6,5 +6,5 @@ export class RequestMessageDto {
   @IsString()
   @IsNotEmpty({ message: 'Wallet address is required' })
   @ApiProperty({ example: '0xAbc123...', description: 'Wallet address to sign with' })
-  wallet: string;
+  wallet!: string;
 }

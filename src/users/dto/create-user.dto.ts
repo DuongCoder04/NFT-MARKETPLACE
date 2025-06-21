@@ -4,7 +4,7 @@ import { IsEthereumAddress, IsOptional, IsObject } from 'class-validator';
 export class CreateUserDto {
   @IsEthereumAddress()
   @ApiProperty({ example: '0xAbc123...', description: 'Wallet address to sign with' })
-  wallet_address: string;
+  wallet_address!: string;
 
   @IsOptional()
   @IsObject()

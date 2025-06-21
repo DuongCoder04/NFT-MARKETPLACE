@@ -5,9 +5,9 @@ import { IsString } from 'class-validator';
 export class LoginDto {
   @IsString()
   @ApiProperty({ example: '0xAbc123...', description: 'Wallet address to sign with' })
-  wallet: string;
+  wallet!: string;
 
   @IsString()
   @ApiProperty({ example: '0xAbc123...', description: 'Your signature' })
-  signature: string;
+  signature!: string;
 }

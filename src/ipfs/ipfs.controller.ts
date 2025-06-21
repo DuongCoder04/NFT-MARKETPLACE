@@ -11,15 +11,20 @@ import { v4 as uuidv4 } from 'uuid';
 import { extname } from 'path';
 import { IpfsService } from './ipfs.service';
 import { CreateMetadataDto } from './dto/create-metadata.dto';
-import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 
-@ApiTags('IPFS')
+@ApiTags('ipfs')
 @Controller('ipfs')
 export class IpfsController {
   constructor(private readonly ipfsService: IpfsService) {}
 
-  // POST /ipfs/upload-image
   @Post('upload-image')
+  @ApiOperation({ summary: 'Upload image to IPFS' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -48,8 +53,8 @@ export class IpfsController {
     return { ipfsUrl };
   }
 
-  // POST /ipfs/upload-metadata
   @Post('upload-metadata')
+  @ApiOperation({ summary: 'Upload metadata JSON to IPFS' })
   async uploadMetadata(@Body() body: CreateMetadataDto) {
     const ipfsUrl = await this.ipfsService.uploadMetadata(body);
     return { ipfsUrl };
