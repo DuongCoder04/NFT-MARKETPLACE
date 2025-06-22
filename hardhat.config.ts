@@ -11,15 +11,18 @@ const config: HardhatUserConfig = {
     localhost: {
       url: 'http://127.0.0.1:8545',
     },
-    sepolia: {
-      url: process.env.SEPOLIA_RPC_URL || '',
+    bscTestnet: {
+      url: 'https://data-seed-prebsc-1-s1.binance.org:8545/',
+      chainId: 97,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: parseInt(process.env.CHAIN_ID || '11155111'),
     },
   },
 
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY || '',
+    // Nếu bạn dùng BscScan API để verify contract
+    apiKey: {
+      bscTestnet: process.env.BSCSCAN_API_KEY || '',
+    },
   },
 
   paths: {

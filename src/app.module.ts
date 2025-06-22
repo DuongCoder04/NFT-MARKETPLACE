@@ -17,6 +17,14 @@ import { TokenService } from './blockchain/token.service';
 import { TokenModule } from './blockchain/token.module';
 import { Nft } from './ipfs/nft.entity';
 import { Image } from './ipfs/image.entity';
+import { ItemsModule } from './item/item.module';
+import { Item } from './item/item.entity';
+import { TransactionsModule } from './transaction/transaction.module';
+import { Transaction } from './transaction/transaction.entity';
+import { ListingModule } from './listing/listing.module';
+import { Listing } from './listing/listing.entity';
+
+
 @Module({
   imports: [
     // Load biến môi trường toàn cục
@@ -36,14 +44,14 @@ import { Image } from './ipfs/image.entity';
         username: config.get<string>('DATABASE_USER'),
         password: config.get<string>('DATABASE_PASSWORD'),
         database: config.get<string>('DATABASE_NAME'),
-        entities: [User, Image, Nft],
+        entities: [User, Image, Nft, Item, Transaction, Listing],
         synchronize: true,
         logging: true,
       }),
     }),
 
     // Đăng ký các entity riêng
-    TypeOrmModule.forFeature([User, Image, Nft]),
+    TypeOrmModule.forFeature([User, Image, Nft, Item, Transaction, Listing]),
 
     // Đăng ký JWT từ biến môi trường
     JwtModule.registerAsync({
@@ -61,7 +69,10 @@ import { Image } from './ipfs/image.entity';
     AuthModule,
     UsersModule,
     IpfsModule,
-    TokenModule
+    TokenModule,
+    ItemsModule,
+    TransactionsModule,
+    ListingModule
   ],
   controllers: [AppController, TokenController],
   providers: [AppService, TokenService],
