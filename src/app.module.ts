@@ -15,7 +15,8 @@ import { User } from './users/users.entity';
 import { TokenController } from './blockchain/token.controller';
 import { TokenService } from './blockchain/token.service';
 import { TokenModule } from './blockchain/token.module';
-
+import { Nft } from './ipfs/nft.entity';
+import { Image } from './ipfs/image.entity';
 @Module({
   imports: [
     // Load biến môi trường toàn cục
@@ -35,14 +36,14 @@ import { TokenModule } from './blockchain/token.module';
         username: config.get<string>('DATABASE_USER'),
         password: config.get<string>('DATABASE_PASSWORD'),
         database: config.get<string>('DATABASE_NAME'),
-        entities: [User],
+        entities: [User, Image, Nft],
         synchronize: true,
         logging: true,
       }),
     }),
 
     // Đăng ký các entity riêng
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Image, Nft]),
 
     // Đăng ký JWT từ biến môi trường
     JwtModule.registerAsync({

@@ -4,13 +4,25 @@ import axios from 'axios';
 import FormData from 'form-data'; // ✅ import chuẩn
 import { createReadStream } from 'fs';
 import { join } from 'path';
-
+import { Image } from './image.entity'; // Assuming you have an Image entity defined
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Nft } from './nft.entity'; // Assuming you have an Nft entity defined
 @Injectable()
 export class IpfsService {
   private readonly logger = new Logger(IpfsService.name);
   private readonly PINATA_BASE_URL = 'https://api.pinata.cloud/pinning';
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+
+    @InjectRepository(Image)
+    private readonly imageRepository: Repository<Image>,
+
+    @InjectRepository(Nft)
+    private readonly nftRepository: Repository<Nft>,
+  ) { }
+
 
   async uploadImage(file: Express.Multer.File): Promise<string> {
     const apiKey = this.configService.get<string>('PINATA_API_KEY');
@@ -34,11 +46,21 @@ export class IpfsService {
         },
       });
 
-      return `https://gateway.pinata.cloud/ipfs/${res.data.IpfsHash}`;
+      const ipfsHash = res.data.IpfsHash;
+
+      // Save to DB
+      await this.imageRepository.save({
+        ipfs_hash: ipfsHash,
+        file_name: file.originalname,
+        file_type: file.mimetype,
+      });
+
+      return `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
     } catch (error: unknown) {
       this.handleError(error, 'Upload image failed');
     }
   }
+
 
   async uploadMetadata(metadata: any): Promise<string> {
     const apiKey = this.configService.get<string>('PINATA_API_KEY');
@@ -65,11 +87,19 @@ export class IpfsService {
         },
       });
 
+      const metadataUri = `ipfs://${res.data.IpfsHash}`;
+
+      // Save to DB
+      await this.nftRepository.save({
+        metadata_uri: metadataUri,
+      });
+
       return `https://gateway.pinata.cloud/ipfs/${res.data.IpfsHash}`;
     } catch (error: unknown) {
       this.handleError(error, 'Upload metadata failed');
     }
   }
+
 
   private handleError(error: unknown, context: string): never {
     if (error && typeof error === 'object' && 'response' in error) {
