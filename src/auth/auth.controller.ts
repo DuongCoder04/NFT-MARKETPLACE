@@ -13,30 +13,28 @@ import { SignatureRequestDto } from './dto/signature-request.dto';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('request-message')
-  @ApiOperation({ summary: 'Yêu cầu thông điệp để đăng nhập' })
-  @ApiResponse({ status: 200, description: 'Trả về message để ký' })
   @ApiBody({ type: RequestMessageDto })
   async getNonce(@Body() dto: RequestMessageDto) {
     if (!dto.wallet) {
       throw new BadRequestException('Thiếu địa chỉ ví');
     }
-
-    const message = await this.authService.getNonce(dto.wallet);
-
+    const msg = await this.authService.getNonce(dto.wallet);
+    const message = msg.message;
     return { message };
   }
+
   @Post('generate-signature')
+  @ApiBody({ type: SignatureRequestDto })
   async getSignature(@Body() body: SignatureRequestDto) {
-    const { wallet, nonce , privateKey} = body;
+    const { wallet, nonce, privateKey } = body;
     const signature = await this.authService.generateSignature(wallet, nonce, privateKey);
     return { signature };
   }
+
   @Post('login')
-  @ApiOperation({ summary: 'Đăng nhập bằng chữ ký' })
-  @ApiResponse({ status: 200, description: 'Trả về JWT token nếu hợp lệ' })
   @ApiBody({ type: LoginDto })
   async login(@Body() dto: LoginDto) {
     if (!dto.wallet || !dto.signature) {
@@ -44,7 +42,6 @@ export class AuthController {
     }
 
     const token = await this.authService.verifySignature(dto.wallet, dto.signature);
-
     return { token };
   }
 }

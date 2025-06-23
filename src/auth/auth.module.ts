@@ -7,14 +7,16 @@ import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { IpfsModule } from 'src/ipfs/ipfs.module';
+import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
   imports: [
     PassportModule,
     UsersModule,
-    IpfsModule, // 👈 IMPORT IPFS MODULE
+    IpfsModule,
+    RedisModule,
     JwtModule.registerAsync({
-      imports: [ConfigModule], // ⚠️ cần để truy cập process.env
+      imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'), // ✅ load từ .env
         signOptions: { expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '1h' },
@@ -25,4 +27,4 @@ import { IpfsModule } from 'src/ipfs/ipfs.module';
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
 })
-export class AuthModule {}
+export class AuthModule { }

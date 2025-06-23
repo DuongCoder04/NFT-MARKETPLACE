@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { TokenController } from 'src/blockchain/token.controller';
+import { TokenController } from 'src/token/token.controller';
 
-import { TokenService } from 'src/blockchain/token.service';
+import { TokenService } from 'src/token/token.service';
 import { TransactionsModule } from 'src/transaction/transaction.module';
 
 @Module({

@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 // 🧾 Đường dẫn file chứa ví
 const walletPath = path.join(__dirname, 'wallet1.json');
 
-// 🪪 Bước 1: Tạo hoặc đọc ví
+// 🪪 Tạo hoặc đọc ví
 let wallet;
 if (fs.existsSync(walletPath)) {
   const { privateKey } = JSON.parse(fs.readFileSync(walletPath, 'utf-8'));
@@ -22,10 +22,7 @@ if (fs.existsSync(walletPath)) {
   fs.writeFileSync(
     walletPath,
     JSON.stringify(
-      {
-        address: wallet.address,
-        privateKey: wallet.privateKey,
-      },
+      { address: wallet.address, privateKey: wallet.privateKey },
       null,
       2,
     ),
@@ -37,19 +34,19 @@ if (fs.existsSync(walletPath)) {
 const backendURL = 'http://localhost:3000';
 
 async function login() {
-  // 🚪 Bước 2: Gửi POST để lấy message
+  // 🚪 Bước 1: Lấy nonce/message
   const nonceRes = await axios.post(`${backendURL}/auth/request-message`, {
     wallet: wallet.address,
   });
 
-  const messageToSign = nonceRes.data.message.message;
+  const messageToSign = nonceRes.data.message; // ✅ Sửa ở đây
   console.log('📩 Thông điệp từ backend:', messageToSign);
 
-  // ✍️ Bước 3: Ký message
+  // ✍️ Bước 2: Ký message
   const signature = await wallet.signMessage(messageToSign);
   console.log('✍️ Chữ ký:', signature);
 
-  // 🔐 Bước 4: Gửi chữ ký để đăng nhập
+  // 🔐 Bước 3: Đăng nhập
   const loginRes = await axios.post(`${backendURL}/auth/login`, {
     wallet: wallet.address,
     signature,

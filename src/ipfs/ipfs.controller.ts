@@ -4,6 +4,7 @@ import {
   UploadedFile,
   UseInterceptors,
   Body,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -12,19 +13,22 @@ import { extname } from 'path';
 import { IpfsService } from './ipfs.service';
 import { CreateMetadataDto } from './dto/create-metadata.dto';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiConsumes,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 
-@ApiTags('ipfs')
+@ApiTags('IPFS')
+@ApiBearerAuth()
 @Controller('ipfs')
 export class IpfsController {
-  constructor(private readonly ipfsService: IpfsService) {}
+  constructor(private readonly ipfsService: IpfsService) { }
 
   @Post('upload-image')
-  @ApiOperation({ summary: 'Upload image to IPFS' })
+  @UseGuards(AuthGuard('jwt'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -53,8 +57,8 @@ export class IpfsController {
     return { ipfsUrl };
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('upload-metadata')
-  @ApiOperation({ summary: 'Upload metadata JSON to IPFS' })
   async uploadMetadata(@Body() body: CreateMetadataDto) {
     const ipfsUrl = await this.ipfsService.uploadMetadata(body);
     return { ipfsUrl };

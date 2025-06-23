@@ -3,7 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Listing } from "./listing.entity";
 import { Repository } from "typeorm";
 import { Item } from "src/item/item.entity";
-import { TokenService } from "src/blockchain/token.service";
+import { TokenService } from "src/token/token.service";
 import { TransactionsService } from "src/transaction/transaction.service";
 import { CreateListingDto } from "./dto/create-listing.dto";
 import { BuyItemDto } from "./dto/buy-item.dto";
@@ -72,5 +72,20 @@ export class ListingService {
         });
 
         return { message: 'Purchase successful', txHash };
+    }
+
+    async findAll() {
+        return this.listingRepo.find({
+            relations: ['item'],
+            order: { createdAt: 'DESC' },
+        });
+    }
+
+    async findByWallet(wallet: string) {
+        return this.listingRepo.find({
+            where: { seller: wallet },
+            relations: ['item'],
+            order: { createdAt: 'DESC' },
+        });
     }
 }

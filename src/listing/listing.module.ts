@@ -4,7 +4,7 @@ import { ListingController } from './listing.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Listing } from './listing.entity';
 import { Item } from 'src/item/item.entity';
-import { TokenModule } from 'src/blockchain/token.module';
+import { TokenModule } from 'src/token/token.module';
 import { TransactionsModule } from 'src/transaction/transaction.module';
 
 @Module({

@@ -12,9 +12,9 @@ import { IpfsModule } from './ipfs/ipfs.module';
 
 import { User } from './users/users.entity';
 
-import { TokenController } from './blockchain/token.controller';
-import { TokenService } from './blockchain/token.service';
-import { TokenModule } from './blockchain/token.module';
+import { TokenController } from './token/token.controller';
+import { TokenService } from './token/token.service';
+import { TokenModule } from './token/token.module';
 import { Nft } from './ipfs/nft.entity';
 import { Image } from './ipfs/image.entity';
 import { ItemsModule } from './item/item.module';
@@ -23,6 +23,7 @@ import { TransactionsModule } from './transaction/transaction.module';
 import { Transaction } from './transaction/transaction.entity';
 import { ListingModule } from './listing/listing.module';
 import { Listing } from './listing/listing.entity';
+import { RedisModule } from './redis/redis.module';
 
 
 @Module({
@@ -72,9 +73,10 @@ import { Listing } from './listing/listing.entity';
     TokenModule,
     ItemsModule,
     TransactionsModule,
-    ListingModule
+    ListingModule,
+    RedisModule
   ],
   controllers: [AppController, TokenController],
-  providers: [AppService, TokenService],
+  providers: [AppService, TokenService, RedisModule],
 })
 export class AppModule { }
